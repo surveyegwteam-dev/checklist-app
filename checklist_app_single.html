@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Checklist รายจ่ายประจำ</title>
+
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Checklist">
+<link rel="apple-touch-icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxOTIiIGhlaWdodD0iMTkyIj48cmVjdCB3aWR0aD0iMTkyIiBoZWlnaHQ9IjE5MiIgcng9IjMyIiBmaWxsPSIjMTk3NmQyIi8+PHRleHQgeD0iOTYiIHk9IjEyMCIgZm9udC1zaXplPSI5NiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0id2hpdGUiPuKckzwvdGV4dD48L3N2Zz4=">
+
+
+manifest.json
+
+<style>
+body {
+    font-family: Arial, sans-serif;
+    background: #f2f2f2;
+    padding: 20px;
+}
+.container {
+    max-width: 450px;
+    margin: auto;
+    background: #fff;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+h2 {
+    text-align: center;
+}
+.item {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 0;
+    border-bottom: 1px solid #eee;
+}
+.summary {
+    margin-top: 15px;
+    text-align: center;
+    font-weight: bold;
+}
+.red { color: #d32f2f; }
+.green { color: #2e7d32; }
+
+canvas {
+    display: block;
+    margin: 15px auto;
+}
+
+button {
+    width: 100%;
+    padding: 10px;
+    border-radius: 8px;
+    border: none;
+    background: #1976d2;
+    color: #fff;
+    font-size: 16px;
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+    <h2>✅ Checklist รายจ่าย</h2>
+
+    <canvas id="progress" width="160" height="160"></canvas>
+
+    <div class="item"><label><input type="checkbox" data-id="house" data-amount="1000"> ค่าบ้าน</label><span>1,000</span></div>
+    <div class="item"><label><input type="checkbox" data-id="condo" data-amount="9425"> ค่าคอนโด</label><span>9,425</span></div>
+    <div class="item"><label><input type="checkbox" data-id="uobloan" data-amount="1500"> สินเชื่อ UOB</label><span>1,500</span></div>
+    <div class="item"><label><input type="checkbox" data-id="uobcredit" data-amount="13000"> Credit UOB</label><span>13,000</span></div>
+    <div class="item"><label><input type="checkbox" data-id="kbank" data-amount="5000"> Credit K Bank</label><span>5,000</span></div>
+    <div class="item"><label><input type="checkbox" data-id="shopee" data-amount="1000"> Shopee Easy Cash</label><span>1,000</span></div>
+    <div class="item"><label><input type="checkbox" data-id="car" data-amount="6700"> ค่ารถ</label><span>6,700</span></div>
+
+    <div id="summary" class="summary"></div>
+    <button onclick="resetMonth()">🔄 เริ่มเดือนใหม่</button>
+<button onclick="sharePage()">📤 แชร์ / ติดตั้งบน iPhone</button>
+</div>
+
+<script>
+const total = 37625;
+const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+
+function drawProgress(paid) {
+    const canvas = document.getElementById("progress");
+    const ctx = canvas.getContext("2d");
+    const percent = paid / total;
+
+    ctx.clearRect(0,0,160,160);
+
+    // background
+    ctx.beginPath();
+    ctx.arc(80,80,70,0,Math.PI*2);
+    ctx.strokeStyle = "#eee";
+    ctx.lineWidth = 12;
+    ctx.stroke();
+
+    // progress
+    ctx.beginPath();
+    ctx.arc(80,80,70,-Math.PI/2,(Math.PI*2*percent)-Math.PI/2);
+    ctx.strokeStyle = "#4caf50";
+    ctx.lineWidth = 12;
+    ctx.stroke();
+
+    ctx.fillStyle = "#333";
+    ctx.font = "18px Arial";
+    ctx.textAlign = "center";
+    ctx.fillText(Math.round(percent*100)+"%",80,88);
+}
+
+function calculate() {
+    let paid = 0;
+    checkboxes.forEach(cb => {
+        localStorage.setItem(cb.dataset.id, cb.checked);
+        if (cb.checked) paid += Number(cb.dataset.amount);
+    });
+
+    const remaining = total - paid;
+    const summary = document.getElementById("summary");
+
+    if (remaining === 0) {
+        summary.className = "summary green";
+        summary.innerHTML = `✅ จ่ายครบแล้ว ${paid.toLocaleString()} บาท`;
+    } else {
+        summary.className = "summary red";
+        summary.innerHTML = `จ่ายแล้ว ${paid.toLocaleString()} บาท<br>คงเหลือ ${remaining.toLocaleString()} บาท`;
+    }
+
+    drawProgress(paid);
+}
+
+checkboxes.forEach(cb => {
+    cb.checked = localStorage.getItem(cb.dataset.id) === "true";
+    cb.addEventListener("change", calculate);
+});
+
+calculate();
+
+function resetMonth() {
+    if(confirm("เริ่มเดือนใหม่?")) {
+        checkboxes.forEach(cb => {
+            cb.checked = false;
+            localStorage.removeItem(cb.dataset.id);
+        });
+        calculate();
+    }
+}
+
+// Register Service Worker
+if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.register("service-worker.js");
+}
+</script>
+
+</body>
+</html>
