@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="th"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#1976d2"><link rel="manifest" href="./manifest.json"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="รายจ่าย"><title>Checklist รายจ่าย</title>
+<style>
+:root{color-scheme:light dark;--bg:#f2f5f9;--card:white;--text:#17283b;--line:#dde4ec}*{box-sizing:border-box}body{margin:0;padding:24px 14px;background:var(--bg);color:var(--text);font-family:Tahoma,Arial,sans-serif;line-height:1.7}main{max-width:480px;margin:auto;padding:24px;background:var(--card);border-radius:18px}h1{text-align:center;font-size:24px;margin:0}p{margin:10px 0}.sub{font-size:14px;text-align:center}progress{width:100%;height:20px;accent-color:#32874b}.item{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:14px 0;border-bottom:1px solid var(--line);cursor:pointer}.item span{display:flex;align-items:center;gap:8px}input{width:22px;height:22px;flex-shrink:0}.paid span{text-decoration:line-through;opacity:.7}.summary{background:var(--bg);padding:16px;margin:20px 0;border-radius:12px}.summary p{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}button{width:100%;padding:13px;background:#1976d2;color:white;border:0;border-radius:10px;font:inherit;cursor:pointer}.note{font-size:12px}#complete{color:#32874b} :focus-visible{outline:3px solid #dc9800;outline-offset:3px}@media(prefers-color-scheme:dark){:root{--bg:#15202c;--card:#202e3d;--text:#edf3fb;--line:#405064}}@media(max-width:360px){main{padding:16px}.item{font-size:14px}}
+</style></head><body><main>
+<h1>✅ Checklist รายจ่าย</h1><p class="sub">เลือกรายการที่ชำระแล้วเพื่อติดตามยอดคงเหลือ</p>
+<label for="progress">ความคืบหน้าการชำระ <strong id="percent">0%</strong></label><progress id="progress" max="100" value="0">0%</progress>
+<div id="items"><label class="item"><span><input type="checkbox" data-id="house"> ค่าบ้าน</span><strong>1,000</strong></label><label class="item"><span><input type="checkbox" data-id="condo"> ค่าคอนโด</span><strong>9,425</strong></label><label class="item"><span><input type="checkbox" data-id="uobloan"> สินเชื่อ UOB</span><strong>1,440</strong></label><label class="item"><span><input type="checkbox" data-id="uobcredit"> Credit UOB</span><strong>14,000</strong></label><label class="item"><span><input type="checkbox" data-id="kbank"> Credit K Bank</span><strong>4,500</strong></label><label class="item"><span><input type="checkbox" data-id="shopee"> Shopee Easy Cash</span><strong>2,500</strong></label><label class="item"><span><input type="checkbox" data-id="ktc"> KTC</span><strong>500</strong></label></div>
+<section class="summary" aria-live="polite" aria-atomic="true"><p>ยอดรวมทั้งหมด <strong id="total">33,365 บาท</strong></p><p>จ่ายแล้ว <strong id="paid">0 บาท</strong></p><p>คงเหลือ <strong id="remaining">33,365 บาท</strong></p><p>รายการที่ชำระแล้ว <strong id="count">0 / 7</strong></p><div id="complete" hidden>✅ จ่ายครบแล้วทุกรายการ</div></section>
+<button type="button" id="reset">🔄 เริ่มเดือนใหม่</button><p id="note" class="note" role="status">บันทึกสถานะเฉพาะเบราว์เซอร์นี้ ไม่ซิงก์ข้ามอุปกรณ์ การล้างข้อมูลเว็บไซต์อาจลบสถานะที่บันทึกไว้</p><noscript>กรุณาเปิด JavaScript เพื่อคำนวณยอดและบันทึกสถานะ</noscript>
+</main><script>
+'use strict';
+(function () {
+const items=[{"id": "house", "name": "ค่าบ้าน", "amount": 1000}, {"id": "condo", "name": "ค่าคอนโด", "amount": 9425}, {"id": "uobloan", "name": "สินเชื่อ UOB", "amount": 1440}, {"id": "uobcredit", "name": "Credit UOB", "amount": 14000}, {"id": "kbank", "name": "Credit K Bank", "amount": 4500}, {"id": "shopee", "name": "Shopee Easy Cash", "amount": 2500}, {"id": "ktc", "name": "KTC", "amount": 500}];
+const key='expense-checklist-v2';
+const boxes=Array.from(document.querySelectorAll('#items input'));
+const total=items.reduce((sum,item)=>sum+item.amount,0);
+const money=value=>value.toLocaleString('th-TH')+' บาท';
+let state={};
+function warn(){document.getElementById('note').textContent='ไม่สามารถบันทึกสถานะในเบราว์เซอร์นี้ได้ สถานะจะคงอยู่เฉพาะขณะที่เปิดหน้านี้';}
+try{const saved=JSON.parse(localStorage.getItem(key)||'{}');if(saved && typeof saved==='object' && !Array.isArray(saved)){items.forEach(item=>{state[item.id]=saved[item.id]===true;});}}catch(e){warn();}
+function save(){try{localStorage.setItem(key,JSON.stringify(state));}catch(e){warn();}}
+function update(){let paid=0,count=0;boxes.forEach(box=>{box.checked=state[box.dataset.id]===true;box.closest('label').classList.toggle('paid',box.checked);if(box.checked){paid+=items.find(item=>item.id===box.dataset.id).amount;count++;}});const percent=total>0?Math.min(100,Math.max(0,paid/total*100)):0;document.getElementById('total').textContent=money(total);document.getElementById('paid').textContent=money(paid);document.getElementById('remaining').textContent=money(total-paid);document.getElementById('count').textContent=count+' / '+items.length;document.getElementById('percent').textContent=Math.round(percent)+'%';document.getElementById('progress').value=percent;document.getElementById('complete').hidden=count!==items.length;}
+boxes.forEach(box=>box.addEventListener('change',()=>{state[box.dataset.id]=box.checked;save();update();}));
+document.getElementById('reset').addEventListener('click',()=>{if(window.confirm('เริ่มเดือนใหม่และล้างเครื่องหมายชำระแล้วทุกรายการ?')){state={};save();update();}});
+update();
+if('serviceWorker' in navigator && location.protocol==='https:'){window.addEventListener('load',()=>{navigator.serviceWorker.register('./service-worker.js').catch(()=>{document.getElementById('note').textContent+=' ยังไม่พร้อมใช้งานออฟไลน์';});});}
+})();
+</script></body></html>
